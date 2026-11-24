@@ -124,9 +124,6 @@ function App() {
     return (
       <div className="splash-screen">
         <img className="splash-logo" src={logo} alt="GymNexus Logo" />
-        <h1 className="splash-name">
-          Gym<span>Nexus</span>
-        </h1>
         <div className="splash-bar">
           <div className="splash-bar-fill" />
         </div>
