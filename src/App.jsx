@@ -1,0 +1,170 @@
+
+import { useEffect, useState } from "react";
+
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+
+import { auth, db } from "./firebase/config";
+
+import {
+  Sidebar,
+  Header,
+  Dashboard,
+} from "./components/DashboardComponents";
+
+import Login from "./pages/Auth/Login.jsx";
+import Signup from "./pages/Auth/Signup.jsx";
+import Members from "./pages/Members/Members.jsx";
+
+function App() {
+  const [user, setUser] = useState(null);
+  const [ownerProfile, setOwnerProfile] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  const [authPage, setAuthPage] = useState("login");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activePage, setActivePage] = useState("dashboard");
+
+  useEffect(() => {
+    let mounted = true;
+
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      async (currentUser) => {
+        if (!mounted) return;
+
+        setCheckingAuth(true);
+        setUser(currentUser);
+        setIsAdmin(false);
+        setOwnerProfile(null);
+
+        if (!currentUser) {
+          setActivePage("dashboard");
+          setCheckingAuth(false);
+          return;
+        }
+
+        try {
+          const adminRef = doc(db, "admins", currentUser.uid);
+          const adminSnap = await getDoc(adminRef);
+
+          if (!mounted) return;
+
+          if (
+            adminSnap.exists() &&
+            adminSnap.data().role === "owner"
+          ) {
+            setIsAdmin(true);
+            setOwnerProfile(adminSnap.data());
+          }
+        } catch (error) {
+          console.error("Owner verification failed:", error);
+        } finally {
+          if (mounted) setCheckingAuth(false);
+        }
+      }
+    );
+
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      setSidebarOpen(false);
+      setActivePage("dashboard");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
+
+  const handleNavigation = (page) => {
+    setActivePage(page);
+    setSidebarOpen(false);
+  };
+
+  if (checkingAuth) {
+    return (
+      <div className="loading-screen">
+        Loading GymNexus...
+      </div>
+    );
+  }
+
+  if (!user) {
+    return authPage === "signup" ? (
+      <Signup
+        onSignupSuccess={() => setAuthPage("login")}
+        onLogin={() => setAuthPage("login")}
+      />
+    ) : (
+      <Login onSignup={() => setAuthPage("signup")} />
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="loading-screen">
+        <h2>Access Denied</h2>
+        <p>
+          This account is not authorized to access GymNexus.
+        </p>
+        <button onClick={handleLogout}>Logout</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="app-layout">
+
+      {sidebarOpen && (
+        <button
+          type="button"
+          aria-label="Close navigation"
+          className="sidebar-overlay"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      <Sidebar
+        isOpen={sidebarOpen}
+        onLogout={handleLogout}
+        activePage={activePage}
+        onNavigate={handleNavigation}
+      />
+
+      <main className="main-area">
+
+        <Header
+          onMenuClick={() =>
+            setSidebarOpen((open) => !open)
+          }
+          user={user}
+          ownerProfile={ownerProfile}
+          activePage={activePage}
+        />
+
+        <div className="page-content">
+
+          {activePage === "dashboard" && (
+            <Dashboard
+              user={user}
+              onNavigate={handleNavigation}
+            />
+          )}
+
+          {activePage === "members" && (
+            <Members />
+          )}
+
+        </div>
+      </main>
+    </div>
+  );
+}
+
+export default App;
