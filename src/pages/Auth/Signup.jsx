@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth } from "../../firebase/config";
+import logo from "../../assets/logo.png";
 
 function Signup({ onSignupSuccess, onLogin }) {
   const [fullName, setFullName] = useState("");
@@ -52,8 +53,11 @@ function Signup({ onSignupSuccess, onLogin }) {
   return (
     <div className="auth-container">
       <form className="auth-card" onSubmit={handleSignup}>
+        <div className="auth-brand">
+          <img className="auth-logo" src={logo} alt="GymNexus Logo" />
+        </div>
         <h1>Create GymNexus Account</h1>
-        <p>Register your gym owner account.</p>
+        <p className="auth-subtitle">Register your gym owner account.</p>
 
         <input
           type="text"
@@ -89,7 +93,7 @@ function Signup({ onSignupSuccess, onLogin }) {
           {loading ? "Creating Account..." : "Sign Up"}
         </button>
 
-        <p>
+        <p className="auth-switch">
           Already registered?{" "}
           <button type="button" onClick={onLogin}>
             Login

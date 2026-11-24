@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../../firebase/config";
+import logo from "../../assets/logo.png";
 
 function Login({ onLoginSuccess, onSignup }) {
   const [email, setEmail] = useState("");
@@ -28,8 +29,11 @@ function Login({ onLoginSuccess, onSignup }) {
   return (
     <div className="auth-container">
       <form className="auth-card" onSubmit={handleLogin}>
+        <div className="auth-brand">
+          <img className="auth-logo" src={logo} alt="GymNexus Logo" />
+        </div>
         <h1>Welcome Back</h1>
-        <p>Login to your GymNexus account.</p>
+        <p className="auth-subtitle">Login to your GymNexus account.</p>
 
         <input
           type="email"
@@ -55,7 +59,7 @@ function Login({ onLoginSuccess, onSignup }) {
           {loading ? "Logging in..." : "Login"}
         </button>
 
-        <p>
+        <p className="auth-switch">
           New to GymNexus?{" "}
           <button type="button" onClick={onSignup}>
             Create Account
