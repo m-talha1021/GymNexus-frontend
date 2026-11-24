@@ -16,8 +16,9 @@ function Login({ onLoginSuccess, onSignup }) {
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      onLoginSuccess();
+      onLoginSuccess?.();
     } catch (err) {
+      console.error("Login failed:", err);
       setError("Invalid email or password.");
     } finally {
       setLoading(false);
@@ -32,6 +33,7 @@ function Login({ onLoginSuccess, onSignup }) {
 
         <input
           type="email"
+          aria-label="Email Address"
           placeholder="Email Address"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -40,6 +42,7 @@ function Login({ onLoginSuccess, onSignup }) {
 
         <input
           type="password"
+          aria-label="Password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}

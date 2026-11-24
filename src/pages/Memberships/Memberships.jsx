@@ -24,15 +24,18 @@ import {
   X,
   Package,
   Clock,
-  IndianRupee,
   CheckCircle,
   Power,
 } from "lucide-react";
 
 export default function Memberships() {
+  const user = auth.currentUser;
+
   const [plans, setPlans] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(() => Boolean(user?.uid));
+  const [error, setError] = useState(() =>
+    user?.uid ? "" : "Please log in to manage membership plans."
+  );
   const [search, setSearch] = useState("");
 
   const [showForm, setShowForm] = useState(false);
@@ -50,14 +53,10 @@ export default function Memberships() {
 
   const [formData, setFormData] = useState(emptyForm);
 
-  const user = auth.currentUser;
-
   // LOAD PLANS
 
   useEffect(() => {
     if (!user?.uid) {
-      setLoading(false);
-      setError("Please log in to manage membership plans.");
       return undefined;
     }
 
@@ -298,7 +297,11 @@ export default function Memberships() {
       {error && (
         <div className="membership-error">
           {error}
-          <button onClick={() => setError("")}>
+          <button
+            type="button"
+            onClick={() => setError("")}
+            aria-label="Dismiss error"
+          >
             <X size={16} />
           </button>
         </div>
@@ -471,9 +474,10 @@ export default function Memberships() {
               className="membership-form"
               onSubmit={handleSubmit}
             >
-              <label>Plan Name</label>
+              <label htmlFor="plan-name">Plan Name</label>
 
               <input
+                id="plan-name"
                 name="name"
                 type="text"
                 placeholder="e.g. Premium Plan"
@@ -482,9 +486,10 @@ export default function Memberships() {
                 required
               />
 
-              <label>Duration</label>
+              <label htmlFor="plan-duration">Duration</label>
 
               <select
+                id="plan-duration"
                 name="duration"
                 value={formData.duration}
                 onChange={handleChange}
@@ -495,9 +500,10 @@ export default function Memberships() {
                 <option value="12">12 Months</option>
               </select>
 
-              <label>Price (PKR)</label>
+              <label htmlFor="plan-price">Price (PKR)</label>
 
               <input
+                id="plan-price"
                 name="price"
                 type="number"
                 min="0"
@@ -508,9 +514,10 @@ export default function Memberships() {
                 required
               />
 
-              <label>Description</label>
+              <label htmlFor="plan-description">Description</label>
 
               <textarea
+                id="plan-description"
                 name="description"
                 placeholder="Describe your membership plan..."
                 value={formData.description}
@@ -518,9 +525,10 @@ export default function Memberships() {
                 rows="3"
               />
 
-              <label>Status</label>
+              <label htmlFor="plan-status">Status</label>
 
               <select
+                id="plan-status"
                 name="status"
                 value={formData.status}
                 onChange={handleChange}

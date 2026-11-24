@@ -30,9 +30,13 @@ import {
 } from "lucide-react";
 
 export default function Members() {
+  const user = auth.currentUser;
+
   const [members, setMembers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(() => Boolean(user?.uid));
+  const [error, setError] = useState(() =>
+    user?.uid ? "" : "Please log in to view members."
+  );
 
   const [search, setSearch] = useState("");
 
@@ -50,14 +54,10 @@ export default function Members() {
 
   const [formData, setFormData] = useState(emptyForm);
 
-  const user = auth.currentUser;
-
   // LOAD MEMBERS FROM FIRESTORE
 
   useEffect(() => {
     if (!user?.uid) {
-      setLoading(false);
-      setError("Please log in to view members.");
       return;
     }
 
@@ -425,9 +425,10 @@ export default function Members() {
 
             <form onSubmit={handleSubmit} className="member-form">
 
-              <label>Full Name</label>
+              <label htmlFor="member-fullName">Full Name</label>
 
               <input
+                id="member-fullName"
                 name="fullName"
                 type="text"
                 placeholder="Enter full name"
@@ -436,9 +437,10 @@ export default function Members() {
                 required
               />
 
-              <label>Email Address</label>
+              <label htmlFor="member-email">Email Address</label>
 
               <input
+                id="member-email"
                 name="email"
                 type="email"
                 placeholder="Enter email address"
@@ -447,9 +449,10 @@ export default function Members() {
                 required
               />
 
-              <label>Phone Number</label>
+              <label htmlFor="member-phone">Phone Number</label>
 
               <input
+                id="member-phone"
                 name="phone"
                 type="tel"
                 placeholder="Enter phone number"

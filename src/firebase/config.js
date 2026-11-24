@@ -11,6 +11,16 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
+// Warn loudly in the console when the app is run/deployed without its
+// Firebase environment variables, instead of failing mysteriously on the
+// login screen. Copy .env.example to .env and fill in the values.
+if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+  console.error(
+    "GymNexus: Firebase is not configured. " +
+      "Set the VITE_FIREBASE_* variables (see .env.example) and restart."
+  );
+}
+
 const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);

@@ -28,7 +28,22 @@ function Signup({ onSignupSuccess, onLogin }) {
 
       onSignupSuccess();
     } catch (err) {
-      setError(err.message);
+      console.error("Signup failed:", err);
+
+      const messages = {
+        "auth/email-already-in-use":
+          "An account with this email already exists. Please login instead.",
+        "auth/invalid-email": "Please enter a valid email address.",
+        "auth/weak-password":
+          "Password is too weak. Use at least 6 characters.",
+        "auth/network-request-failed":
+          "Network error. Check your connection and try again.",
+      };
+
+      setError(
+        messages[err.code] ||
+          "Could not create your account. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -42,6 +57,7 @@ function Signup({ onSignupSuccess, onLogin }) {
 
         <input
           type="text"
+          aria-label="Full Name"
           placeholder="Full Name"
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
@@ -50,6 +66,7 @@ function Signup({ onSignupSuccess, onLogin }) {
 
         <input
           type="email"
+          aria-label="Email Address"
           placeholder="Email Address"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -58,6 +75,7 @@ function Signup({ onSignupSuccess, onLogin }) {
 
         <input
           type="password"
+          aria-label="Password"
           placeholder="Password (at least 6 characters)"
           value={password}
           onChange={(e) => setPassword(e.target.value)}

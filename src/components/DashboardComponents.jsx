@@ -30,6 +30,8 @@ import {
 
 import { db } from "../firebase/config";
 
+import logo from "../assets/logo.png";
+
 // HELPERS
 
 const money = (value) =>
@@ -113,7 +115,14 @@ export function Sidebar({
   return (
     <aside className={`sidebar ${isOpen ? "open" : ""}`}>
       <div className="brand">
-        <a href=""><img src="/src/assets/logo.png" alt="GymNexus Logo" /></a>
+        <button
+          type="button"
+          className="brand-button"
+          onClick={() => onNavigate?.("dashboard")}
+          aria-label="GymNexus - go to dashboard"
+        >
+          <img src={logo} alt="GymNexus Logo" />
+        </button>
       </div>
 
       <div className="sidebar-label">MAIN MENU</div>
@@ -137,10 +146,15 @@ export function Sidebar({
       </nav>
 
       <div className="sidebar-bottom">
-        <a href="#settings" className="nav-item">
+        <button
+          type="button"
+          className={`nav-item ${activePage === "settings" ? "active" : ""}`}
+          onClick={() => onNavigate?.("settings")}
+          aria-current={activePage === "settings" ? "page" : undefined}
+        >
           <Settings size={19} />
           <span>Settings</span>
-        </a>
+        </button>
 
         <button
           type="button"
@@ -170,12 +184,20 @@ export function Header({
 
   const knownPaymentIds = useRef(null);
 
+  // Reset the notification list when a different user signs in.
+  // (Render-phase state adjustment, as recommended by React docs.)
+  const [lastUid, setLastUid] = useState(user?.uid);
+
+  if (lastUid !== user?.uid) {
+    setLastUid(user?.uid);
+    setPaymentNotifications([]);
+    setNewCount(0);
+  }
+
   useEffect(() => {
     if (!user?.uid) return undefined;
 
     knownPaymentIds.current = null;
-    setPaymentNotifications([]);
-    setNewCount(0);
 
     const paymentsQuery = query(
       collection(db, "payments"),
@@ -464,16 +486,13 @@ function StatCard({
 export function Dashboard({ user, onNavigate }) {
   const [members, setMembers] = useState([]);
   const [payments, setPayments] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => Boolean(user?.uid));
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (!user?.uid) {
-      setLoading(false);
       return undefined;
     }
-
-    setLoading(true);
 
     let membersReady = false;
     let paymentsReady = false;
