@@ -5,6 +5,7 @@ import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 
 import { auth, db, firebaseReady } from "./firebase/config";
+import logo from "./assets/logo.png";
 
 import {
   Sidebar,
@@ -32,6 +33,7 @@ function App() {
   const [checkingAuth, setCheckingAuth] = useState(firebaseReady);
 
   const [authPage, setAuthPage] = useState("login");
+  const [splashDone, setSplashDone] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activePage, setActivePage] = useState("dashboard");
 
@@ -83,6 +85,13 @@ function App() {
     };
   }, []);
 
+  // Keep the splash screen up for a short minimum time so the
+  // branding is actually seen even when the auth check is instant.
+  useEffect(() => {
+    const timer = setTimeout(() => setSplashDone(true), 1600);
+    return () => clearTimeout(timer);
+  }, []);
+
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -111,10 +120,16 @@ function App() {
     );
   }
 
-  if (checkingAuth) {
+  if (checkingAuth || !splashDone) {
     return (
-      <div className="loading-screen">
-        Loading GymNexus...
+      <div className="splash-screen">
+        <img className="splash-logo" src={logo} alt="GymNexus Logo" />
+        <h1 className="splash-name">
+          Gym<span>Nexus</span>
+        </h1>
+        <div className="splash-bar">
+          <div className="splash-bar-fill" />
+        </div>
       </div>
     );
   }
