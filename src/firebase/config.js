@@ -21,7 +21,21 @@ if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
   );
 }
 
-const app = initializeApp(firebaseConfig);
+// Initialise defensively: with missing/invalid env values getAuth() throws
+// at module load, which used to crash the whole app to a blank white page.
+// Instead, export nulls plus a firebaseReady flag so the UI can show a
+// clear "setup needed" screen.
+let auth = null;
+let db = null;
+let firebaseReady = false;
 
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+try {
+  const app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  db = getFirestore(app);
+  firebaseReady = true;
+} catch (error) {
+  console.error("GymNexus: Firebase failed to initialise:", error);
+}
+
+export { auth, db, firebaseReady };

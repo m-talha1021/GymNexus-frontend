@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 
-import { auth, db } from "./firebase/config";
+import { auth, db, firebaseReady } from "./firebase/config";
 
 import {
   Sidebar,
@@ -29,13 +29,15 @@ function App() {
   const [user, setUser] = useState(null);
   const [ownerProfile, setOwnerProfile] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [checkingAuth, setCheckingAuth] = useState(true);
+  const [checkingAuth, setCheckingAuth] = useState(firebaseReady);
 
   const [authPage, setAuthPage] = useState("login");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activePage, setActivePage] = useState("dashboard");
 
   useEffect(() => {
+    if (!firebaseReady) return;
+
     let mounted = true;
 
     const unsubscribe = onAuthStateChanged(
@@ -95,6 +97,19 @@ function App() {
     setActivePage(page);
     setSidebarOpen(false);
   };
+
+  if (!firebaseReady) {
+    return (
+      <div className="loading-screen">
+        <h2>Setup needed</h2>
+        <p>
+          GymNexus is deployed, but its Firebase settings are
+          missing. Add the VITE_FIREBASE_* environment variables
+          (see .env.example) and redeploy.
+        </p>
+      </div>
+    );
+  }
 
   if (checkingAuth) {
     return (
