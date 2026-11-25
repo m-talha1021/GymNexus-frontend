@@ -26,6 +26,18 @@ button {
   cursor: pointer;
 }
 
+/* No blue flash rectangle on tap/click: mobile browsers paint a tap
+   highlight over anything touched, and desktop browsers paint a focus
+   outline on mouse click. Both are removed for pointer interaction,
+   while the focus outline is kept for keyboard (Tab) navigation. */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
 a {
   text-decoration: none;
   color: inherit;
@@ -260,6 +272,18 @@ input {
 
 button {
   cursor: pointer;
+}
+
+/* No blue flash rectangle on tap/click: mobile browsers paint a tap
+   highlight over anything touched, and desktop browsers paint a focus
+   outline on mouse click. Both are removed for pointer interaction,
+   while the focus outline is kept for keyboard (Tab) navigation. */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
 }
 
 /* ================================
