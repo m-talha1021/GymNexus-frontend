@@ -29,7 +29,6 @@ import {
 } from "firebase/firestore";
 
 import { db } from "../firebase/config";
-import { checkBackendHealth } from "../api";
 
 import logo from "../assets/logo.png";
 
@@ -489,19 +488,6 @@ export function Dashboard({ user, onNavigate }) {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(() => Boolean(user?.uid));
   const [error, setError] = useState("");
-  const [backendStatus, setBackendStatus] = useState("checking");
-
-  // Ping the GymNexus backend once when the dashboard opens so the
-  // header shows whether the API is reachable.
-  useEffect(() => {
-    let cancelled = false;
-    checkBackendHealth().then((status) => {
-      if (!cancelled) setBackendStatus(status);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   useEffect(() => {
     if (!user?.uid) {
@@ -733,26 +719,14 @@ export function Dashboard({ user, onNavigate }) {
           <p>Here's what's happening at your gym.</p>
         </div>
 
-        <div className="heading-actions">
-          <span className={`backend-status backend-status-${backendStatus}`}>
-            <span className="backend-status-dot" />
-            Backend:{" "}
-            {backendStatus === "online"
-              ? "Online"
-              : backendStatus === "offline"
-              ? "Offline"
-              : "Checking..."}
-          </span>
-
-          <button
-            type="button"
-            className="add-button"
-            onClick={() => onNavigate?.("members")}
-          >
-            <Plus size={18} />
-            Add Member
-          </button>
-        </div>
+        <button
+          type="button"
+          className="add-button"
+          onClick={() => onNavigate?.("members")}
+        >
+          <Plus size={18} />
+          Add Member
+        </button>
       </div>
 
       {error && (

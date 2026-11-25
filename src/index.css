@@ -531,46 +531,6 @@ button {
   transform: translateY(-1px);
 }
 
-.heading-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-/* Backend connection status pill shown in the dashboard heading. */
-.backend-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 8px 13px;
-  border-radius: 999px;
-  font-size: 12.5px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.backend-status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: currentColor;
-  flex-shrink: 0;
-}
-
-.backend-status-checking {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.backend-status-online {
-  background: #dcfce7;
-  color: #166534;
-}
-
-.backend-status-offline {
-  background: #fee2e2;
-  color: #991b1b;
-}
 
 /* ================================
    STATISTICS CARDS
@@ -2988,11 +2948,13 @@ img {
 
 @media (max-width: 768px) {
   /* iOS Safari zooms the page when a focused input's text is under 16px;
-     bump every input/select/textarea to 16px on small screens. */
+     bump every input/select/textarea to 16px on small screens.
+     !important is needed: class-scoped input rules (e.g. .auth-card
+     input at 14.5px) beat a bare element selector on specificity. */
   input,
   select,
   textarea {
-    font-size: 16px;
+    font-size: 16px !important;
   }
 
   /* Roomier tables: smaller type and padding so more columns fit;
@@ -3023,16 +2985,6 @@ img {
     width: 100%;
     padding: 12px;
     font-size: 13px;
-  }
-
-  .heading-actions {
-    flex-direction: column;
-    align-items: stretch;
-    width: 100%;
-  }
-
-  .backend-status {
-    justify-content: center;
   }
 
   .members-header .add-button,
@@ -3080,4 +3032,198 @@ img {
   .splash-logo {
     height: 88px;
   }
+}
+
+
+/* Payments page: expiry reminders + success notice. */
+.members-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+.members-notice button {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  display: flex;
+  padding: 2px;
+}
+
+.reminder-panel {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.reminder-panel-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #92400e;
+}
+
+.reminder-panel-heading h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.reminder-count {
+  background: #f59e0b;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  min-width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+}
+
+.reminder-empty {
+  margin: 10px 0 0;
+  color: #78716c;
+  font-size: 13.5px;
+}
+
+.reminder-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.reminder-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #fff;
+  border: 1px solid #fde68a;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.reminder-row > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.reminder-row strong {
+  font-size: 14px;
+  color: #111827;
+}
+
+.reminder-row span {
+  font-size: 12.5px;
+  color: #78716c;
+}
+
+.reminder-send-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #25d366;
+  color: #fff;
+  border: none;
+  border-radius: 9px;
+  padding: 9px 13px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.reminder-send-btn:hover:not(:disabled) {
+  background: #1da851;
+}
+
+.reminder-send-btn:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+
+@media (max-width: 560px) {
+  .reminder-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .reminder-send-btn {
+    justify-content: center;
+  }
+}
+
+
+/* Payments page: paid / not-paid status and toggle buttons. */
+.payment-status {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.payment-paid {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.payment-pending {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.mark-paid-btn,
+.mark-unpaid-btn {
+  flex: 1;
+  border: none;
+  border-radius: 9px;
+  padding: 10px 12px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mark-paid-btn {
+  background: #16a34a;
+  color: #fff;
+}
+
+.mark-paid-btn:hover:not(:disabled) {
+  background: #15803d;
+}
+
+.mark-unpaid-btn {
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+}
+
+.mark-unpaid-btn:hover:not(:disabled) {
+  background: #e2e8f0;
+}
+
+.mark-paid-btn:disabled,
+.mark-unpaid-btn:disabled {
+  opacity: 0.65;
+  cursor: default;
 }

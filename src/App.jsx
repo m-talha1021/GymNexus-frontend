@@ -17,11 +17,11 @@ import Login from "./pages/Auth/Login.jsx";
 import Signup from "./pages/Auth/Signup.jsx";
 import Members from "./pages/Members/Members.jsx";
 import Memberships from "./pages/Memberships/Memberships.jsx";
+import Payments from "./pages/Payments/Payments.jsx";
 
 // Sidebar destinations that do not have a dedicated page yet.
 // They render a simple notice instead of a blank content area.
 const PLACEHOLDER_PAGES = {
-  payments: "Payments",
   inquiries: "Inquiries",
   settings: "Settings",
 };
@@ -199,6 +199,10 @@ function App() {
 
           {activePage === "packages" && (
             <Memberships />
+          )}
+
+          {activePage === "payments" && (
+            <Payments />
           )}
 
           {PLACEHOLDER_PAGES[activePage] && (
