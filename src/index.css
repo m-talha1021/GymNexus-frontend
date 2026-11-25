@@ -411,21 +411,23 @@ button {
 
 .top-header {
   height: 85px;
-  background: #fff;
-  border-bottom: 1px solid #e9edf3;
+  background: #1e1b4b;
+  border-bottom: 1px solid #1e1b4b;
   padding: 0 35px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  color: #fff;
 }
 
 .top-header h2 {
   font-size: 19px;
   font-weight: 700;
+  color: #fff;
 }
 
 .top-header p {
-  color: #8993a4;
+  color: #c7c9e8;
   font-size: 12px;
   margin-top: 5px;
 }
@@ -459,10 +461,10 @@ button {
 .notification-button {
   width: 40px;
   height: 40px;
-  border: 1px solid #e9edf3;
-  background: #fff;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.12);
   border-radius: 9px;
-  color: #596579;
+  color: #fff;
   position: relative;
   display: flex;
   align-items: center;
@@ -491,7 +493,7 @@ button {
 }
 
 .profile-button:hover {
-  background: #f1f5f9;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .profile-overlay {
@@ -563,7 +565,7 @@ button {
 
 .profile-info small {
   font-size: 11px;
-  color: #8993a4;
+  color: #c7c9e8;
 }
 
 .mobile-menu {
@@ -908,10 +910,10 @@ tbody tr:last-child td {
     justify-content: center;
     width: 38px;
     height: 38px;
-    background: #f5f7fb;
+    background: rgba(255, 255, 255, 0.12);
     border: none;
     border-radius: 8px;
-    color: #635bdb;
+    color: #fff;
     flex-shrink: 0;
   }
 

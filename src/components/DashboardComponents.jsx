@@ -24,6 +24,7 @@ import {
   doc,
   onSnapshot,
   query,
+  updateDoc,
   where,
 } from "firebase/firestore";
 
@@ -223,6 +224,9 @@ export function Header({
             .filter(
               (change) =>
                 !knownPaymentIds.current.has(change.doc.id)
+            )
+            .filter(
+              (change) => !change.doc.data().notificationDismissed
             );
 
           if (added.length) {
@@ -251,7 +255,12 @@ export function Header({
         }
 
         setPaymentNotifications((current) => {
-          const merged = [...current, ...payments];
+          const merged = [
+            ...current,
+            ...payments.filter(
+              (payment) => !payment.notificationDismissed
+            ),
+          ];
 
           return merged
             .filter(
@@ -406,13 +415,24 @@ export function Header({
                       type="button"
                       className="notification-item"
                       key={payment.id}
-                      onClick={() =>
+                      onClick={() => {
                         setPaymentNotifications((current) =>
                           current.filter(
                             (item) => item.id !== payment.id
                           )
-                        )
-                      }
+                        );
+                        // Remember the dismissal in Firestore so the
+                        // notification does not come back on refresh.
+                        updateDoc(
+                          doc(db, "payments", payment.id),
+                          { notificationDismissed: true }
+                        ).catch((err) =>
+                          console.error(
+                            "Could not save dismissal:",
+                            err
+                          )
+                        );
+                      }}
                       aria-label="Dismiss notification"
                     >
                       <span className="notification-payment-icon">
