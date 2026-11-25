@@ -167,6 +167,7 @@ export function Header({
   activePage = "dashboard",
 }) {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [newCount, setNewCount] = useState(0);
   const [paymentNotifications, setPaymentNotifications] = useState([]);
   const [notificationError, setNotificationError] = useState("");
@@ -294,6 +295,11 @@ export function Header({
     user?.displayName ||
     user?.email ||
     "Gym Owner";
+
+  // The full name the owner set when the account was created
+  // (saved to the auth profile at signup).
+  const fullName =
+    user?.displayName || ownerProfile?.fullName || user?.email || "—";
 
   const initials = displayName
     .split(/\s+/)
@@ -439,14 +445,37 @@ export function Header({
         </div>
 
         <div className="profile">
-          <div className="profile-avatar">
-            {initials || "GO"}
-          </div>
+          <button
+            type="button"
+            className="profile-button"
+            onClick={() => setProfileOpen((open) => !open)}
+            aria-label="View profile"
+            aria-expanded={profileOpen}
+          >
+            <span className="profile-avatar">{initials || "GO"}</span>
 
-          <div className="profile-info">
-            <strong>{displayName}</strong>
-            <small>Gym Owner</small>
-          </div>
+            <span className="profile-info">
+              <strong>{displayName}</strong>
+              <small>Gym Owner</small>
+            </span>
+          </button>
+
+          {profileOpen && (
+            <>
+              <button
+                type="button"
+                className="profile-overlay"
+                onClick={() => setProfileOpen(false)}
+                aria-label="Close profile"
+              />
+
+              <div className="profile-dropdown">
+                <small>Full Name</small>
+                <strong>{fullName}</strong>
+                {user?.email && <span>{user.email}</span>}
+              </div>
+            </>
+          )}
         </div>
       </div>
     </header>
