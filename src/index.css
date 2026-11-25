@@ -531,6 +531,47 @@ button {
   transform: translateY(-1px);
 }
 
+.heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Backend connection status pill shown in the dashboard heading. */
+.backend-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 13px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.backend-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.backend-status-checking {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.backend-status-online {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.backend-status-offline {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
 /* ================================
    STATISTICS CARDS
 ================================ */
@@ -2928,4 +2969,115 @@ button.nav-item {
   margin-top: 8px;
   color: #8993a4;
   font-size: 13px;
+}
+
+/* ================================
+   MOBILE FRIENDLINESS PASS
+   Consolidated small-screen rules; placed last so they win ties.
+================================ */
+
+/* Safety net: never allow a stray wide element to scroll the page sideways. */
+html,
+body {
+  overflow-x: clip;
+}
+
+img {
+  max-width: 100%;
+}
+
+@media (max-width: 768px) {
+  /* iOS Safari zooms the page when a focused input's text is under 16px;
+     bump every input/select/textarea to 16px on small screens. */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  /* Roomier tables: smaller type and padding so more columns fit;
+     the wrapper still scrolls horizontally when needed. */
+  th,
+  td {
+    padding: 10px 12px;
+    font-size: 12.5px;
+  }
+
+  /* Comfortable touch target for modal close buttons. */
+  .member-modal-close,
+  .membership-modal-close {
+    min-width: 38px;
+    min-height: 38px;
+  }
+}
+
+@media (max-width: 560px) {
+  /* Stack the dashboard heading: title on top, full-width action button. */
+  .page-heading {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .page-heading .add-button {
+    justify-content: center;
+    width: 100%;
+    padding: 12px;
+    font-size: 13px;
+  }
+
+  .heading-actions {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .backend-status {
+    justify-content: center;
+  }
+
+  .members-header .add-button,
+  .memberships-header .add-button {
+    justify-content: center;
+    width: 100%;
+  }
+
+  /* Two-up stat cards get tight under 560px; give them one column
+     only on very small phones, two columns between 421-560px. */
+  .dashboard-content {
+    padding: 20px 14px;
+  }
+}
+
+@media (max-width: 420px) {
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .stat-card {
+    padding: 13px;
+  }
+
+  .stat-card h2 {
+    font-size: 18px;
+  }
+
+  /* Modals use the full small screen comfortably. */
+  .member-modal-overlay,
+  .membership-modal-overlay {
+    padding: 10px;
+  }
+
+  .member-form-actions {
+    flex-wrap: wrap;
+  }
+
+  .member-form-actions button {
+    flex: 1;
+  }
+
+  /* Splash logo scales down on small phones. */
+  .splash-logo {
+    height: 88px;
+  }
 }
