@@ -1,0 +1,35 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isOwner() {
+      return request.auth != null
+        && exists(
+          /databases/$(database)/documents/admins/$(request.auth.uid)
+        )
+        && get(
+          /databases/$(database)/documents/admins/$(request.auth.uid)
+        ).data.role == "owner";
+    }
+
+    match /admins/{adminId} {
+      allow read: if request.auth != null
+        && request.auth.uid == adminId;
+
+      // A signed-in user may create ONLY their own owner record, and
+      // only with role "owner". This is what lets a new gym owner get
+      // in automatically at signup, with no activation step.
+      // Nobody can change or delete an owner record from the app.
+      allow create: if request.auth != null
+        && request.auth.uid == adminId
+        && request.resource.data.role == "owner";
+
+      allow update, delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if isOwner();
+    }
+  }
+}
