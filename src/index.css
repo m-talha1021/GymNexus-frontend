@@ -1007,8 +1007,19 @@ tbody tr:last-child td {
 .notification-item {
   display: flex;
   gap: 11px;
+  width: 100%;
   padding: 13px 2px;
+  border: none;
   border-bottom: 1px solid #f0f2f6;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.notification-item:hover {
+  background: #f8fafc;
 }
 .notification-item:last-child { border-bottom: 0; }
 .notification-payment-icon {

@@ -23,7 +23,6 @@ import Payments from "./pages/Payments/Payments.jsx";
 // They render a simple notice instead of a blank content area.
 const PLACEHOLDER_PAGES = {
   inquiries: "Inquiries",
-  settings: "Settings",
 };
 
 function App() {

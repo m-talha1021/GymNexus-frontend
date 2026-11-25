@@ -7,7 +7,6 @@ import {
   Wallet,
   Package,
   MessageSquare,
-  Settings,
   LogOut,
   Bell,
   Menu,
@@ -143,18 +142,6 @@ export function Sidebar({
             <span>{name}</span>
           </button>
         ))}
-      </nav>
-
-      <div className="sidebar-bottom">
-        <button
-          type="button"
-          className={`nav-item ${activePage === "settings" ? "active" : ""}`}
-          onClick={() => onNavigate?.("settings")}
-          aria-current={activePage === "settings" ? "page" : undefined}
-        >
-          <Settings size={19} />
-          <span>Settings</span>
-        </button>
 
         <button
           type="button"
@@ -164,7 +151,9 @@ export function Sidebar({
           <LogOut size={19} />
           <span>Logout</span>
         </button>
-      </div>
+      </nav>
+
+
     </aside>
   );
 }
@@ -319,7 +308,6 @@ export function Header({
     payments: "Payments",
     packages: "Packages",
     inquiries: "Inquiries",
-    settings: "Settings",
   };
 
   const pageDescription = {
@@ -328,7 +316,6 @@ export function Header({
     payments: "Manage your gym payments.",
     packages: "Manage your membership packages.",
     inquiries: "Manage your gym inquiries.",
-    settings: "Manage your gym settings.",
   };
 
   return (
@@ -409,9 +396,18 @@ export function Header({
               ) : (
                 <div className="notification-list">
                   {paymentNotifications.map((payment) => (
-                    <div
+                    <button
+                      type="button"
                       className="notification-item"
                       key={payment.id}
+                      onClick={() =>
+                        setPaymentNotifications((current) =>
+                          current.filter(
+                            (item) => item.id !== payment.id
+                          )
+                        )
+                      }
+                      aria-label="Dismiss notification"
                     >
                       <span className="notification-payment-icon">
                         <Wallet size={16} />
@@ -434,7 +430,7 @@ export function Header({
                           )?.toLocaleString() || "Recently"}
                         </small>
                       </div>
-                    </div>
+                    </button>
                   ))}
                 </div>
               )}
@@ -585,59 +581,30 @@ export function Dashboard({ user, onNavigate }) {
       (member) => getMemberStatus(member) === "Active"
     ).length;
 
-    const monthlyRevenue = payments.reduce(
-      (total, payment) => {
+    // Members who have not paid this month: no paid payment recorded
+    // for the current month (new monthly records carry a `month` field;
+    // older records are matched by their payment date).
+    const currentMonth = `${now.getFullYear()}-${String(
+      now.getMonth() + 1
+    ).padStart(2, "0")}`;
+
+    const paidStatuses = ["paid", "completed", "success", "successful"];
+
+    const hasPaidThisMonth = (member) =>
+      payments.some((payment) => {
+        if (payment.memberId !== member.id) return false;
         const status = String(
           payment.status || payment.paymentStatus || ""
         ).toLowerCase();
+        if (!paidStatuses.includes(status)) return false;
+        if (payment.month) return payment.month === currentMonth;
+        const date = asDate(payment.createdAt || payment.paymentDate);
+        return date && date >= monthStart && date <= now;
+      });
 
-        const paid = [
-          "paid",
-          "completed",
-          "success",
-          "successful",
-        ].includes(status);
-
-        const date = asDate(
-          payment.createdAt || payment.paymentDate
-        );
-
-        if (paid && date && date >= monthStart && date <= now) {
-          return (
-            total +
-            Number(payment.amount || payment.paidAmount || 0)
-          );
-        }
-
-        return total;
-      },
-      0
-    );
-
-    const pendingPayments = payments.reduce(
-      (total, payment) => {
-        const status = String(
-          payment.status || payment.paymentStatus || ""
-        ).toLowerCase();
-
-        if (
-          ["pending", "due", "unpaid", "partial"].includes(status)
-        ) {
-          return (
-            total +
-            Number(
-              payment.pendingAmount ??
-              payment.balance ??
-              payment.amount ??
-              0
-            )
-          );
-        }
-
-        return total;
-      },
-      0
-    );
+    const pendingPayments = members.filter(
+      (member) => !hasPaidThisMonth(member)
+    ).length;
 
     const recentMembers = [...members]
       .sort((a, b) => {
@@ -671,7 +638,6 @@ export function Dashboard({ user, onNavigate }) {
 
     return {
       activeMembers,
-      monthlyRevenue,
       pendingPayments,
       recentMembers,
       upcoming,
@@ -755,17 +721,9 @@ export function Dashboard({ user, onNavigate }) {
         />
 
         <StatCard
-          title="Monthly Revenue"
-          value={money(stats.monthlyRevenue)}
-          change="Recorded payments this month"
-          icon={Wallet}
-          color="purple"
-        />
-
-        <StatCard
-          title="Pending Payments"
-          value={money(stats.pendingPayments)}
-          change="Outstanding recorded payments"
+          title="Remaining Payments"
+          value={stats.pendingPayments}
+          change="Members yet to pay this month"
           icon={AlertCircle}
           color="orange"
         />
