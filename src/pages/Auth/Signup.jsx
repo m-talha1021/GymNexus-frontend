@@ -1,7 +1,8 @@
 
 import { useState } from "react";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { auth } from "../../firebase/config";
+import { doc, serverTimestamp, setDoc } from "firebase/firestore";
+import { auth, db } from "../../firebase/config";
 import logo from "../../assets/logo.png";
 
 function Signup({ onSignupSuccess, onLogin }) {
@@ -26,6 +27,21 @@ function Signup({ onSignupSuccess, onLogin }) {
       await updateProfile(result.user, {
         displayName: fullName
       });
+
+      // Give the new account its owner record right away, so the
+      // owner gate in App lets it straight in instead of showing
+      // "Access Denied". A failed write does not block signup: the
+      // Access Denied screen offers a one-tap activation instead.
+      try {
+        await setDoc(doc(db, "admins", result.user.uid), {
+          fullName,
+          email,
+          role: "owner",
+          createdAt: serverTimestamp(),
+        });
+      } catch (ownerError) {
+        console.error("Owner record creation failed:", ownerError);
+      }
 
       onSignupSuccess();
     } catch (err) {

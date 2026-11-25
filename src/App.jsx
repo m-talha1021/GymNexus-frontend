@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
 
 import { auth, db, firebaseReady } from "./firebase/config";
 import logo from "./assets/logo.png";
@@ -31,6 +31,9 @@ function App() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(firebaseReady);
 
+  const [activating, setActivating] = useState(false);
+  const [activateError, setActivateError] = useState("");
+
   const [authPage, setAuthPage] = useState("login");
   const [splashDone, setSplashDone] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -41,26 +44,35 @@ function App() {
 
     let mounted = true;
 
-    const unsubscribe = onAuthStateChanged(
-      auth,
-      async (currentUser) => {
-        if (!mounted) return;
+    let adminUnsubscribe = null;
 
-        setCheckingAuth(true);
-        setUser(currentUser);
-        setIsAdmin(false);
-        setOwnerProfile(null);
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (adminUnsubscribe) {
+        adminUnsubscribe();
+        adminUnsubscribe = null;
+      }
 
-        if (!currentUser) {
-          setActivePage("dashboard");
-          setCheckingAuth(false);
-          return;
-        }
+      if (!mounted) return;
 
-        try {
-          const adminRef = doc(db, "admins", currentUser.uid);
-          const adminSnap = await getDoc(adminRef);
+      setCheckingAuth(true);
+      setUser(currentUser);
+      setIsAdmin(false);
+      setOwnerProfile(null);
 
+      if (!currentUser) {
+        setActivePage("dashboard");
+        setCheckingAuth(false);
+        return;
+      }
+
+      // Live listener (not a one-time read): the owner record is
+      // created during signup just after sign-in, so a one-time
+      // read can run before the record exists and wrongly deny
+      // access. Listening re-opens the gate the moment it appears.
+      const adminRef = doc(db, "admins", currentUser.uid);
+      adminUnsubscribe = onSnapshot(
+        adminRef,
+        (adminSnap) => {
           if (!mounted) return;
 
           if (
@@ -69,17 +81,22 @@ function App() {
           ) {
             setIsAdmin(true);
             setOwnerProfile(adminSnap.data());
+          } else {
+            setIsAdmin(false);
+            setOwnerProfile(null);
           }
-        } catch (error) {
+          setCheckingAuth(false);
+        },
+        (error) => {
           console.error("Owner verification failed:", error);
-        } finally {
           if (mounted) setCheckingAuth(false);
         }
-      }
-    );
+      );
+    });
 
     return () => {
       mounted = false;
+      if (adminUnsubscribe) adminUnsubscribe();
       unsubscribe();
     };
   }, []);
@@ -90,6 +107,31 @@ function App() {
     const timer = setTimeout(() => setSplashDone(true), 1600);
     return () => clearTimeout(timer);
   }, []);
+
+  // One-tap fix for accounts created before signup made the owner
+  // record automatically: create it now from the signed-in profile.
+  // The live owner listener above opens the gate as soon as it lands.
+  const handleActivateOwner = async () => {
+    if (!user) return;
+    setActivating(true);
+    setActivateError("");
+
+    try {
+      await setDoc(doc(db, "admins", user.uid), {
+        fullName: user.displayName || "",
+        email: user.email || "",
+        role: "owner",
+        createdAt: serverTimestamp(),
+      });
+    } catch (error) {
+      console.error("Owner activation failed:", error);
+      setActivateError(
+        "Could not activate this account. Please try again."
+      );
+    } finally {
+      setActivating(false);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -148,6 +190,19 @@ function App() {
         <p>
           This account is not authorized to access GymNexus.
         </p>
+        <p>
+          If this is a gym owner account, activate it to continue.
+        </p>
+        <button
+          className="activate-button"
+          onClick={handleActivateOwner}
+          disabled={activating}
+        >
+          {activating ? "Activating..." : "Activate owner access"}
+        </button>
+        {activateError && (
+          <p className="activate-error">{activateError}</p>
+        )}
         <button onClick={handleLogout}>Logout</button>
       </div>
     );
