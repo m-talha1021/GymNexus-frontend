@@ -105,6 +105,7 @@ a {
   border: 1.5px solid #dce1e9;
   border-radius: 10px;
   font-size: 14.5px;
+  color: #172033;
   background: #f8fafc;
   transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
@@ -259,10 +260,28 @@ a {
   box-sizing: border-box;
 }
 
+:root {
+  color-scheme: light;
+}
+
 body {
   font-family: "Inter", "Segoe UI", sans-serif;
   background: #f5f7fb;
   color: #172033;
+}
+
+/* Chrome paints autofilled inputs pale blue with its own text color,
+   which mismatches the rest of the form (white-ish text on blue).
+   Force autofilled fields to look exactly like normal fields. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-text-fill-color: #172033;
+  -webkit-box-shadow: 0 0 0 1000px #f8fafc inset;
+  caret-color: #172033;
+  transition: background-color 5000s ease-in-out 0s;
 }
 
 button,
