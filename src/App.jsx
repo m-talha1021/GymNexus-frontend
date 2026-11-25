@@ -31,9 +31,6 @@ function App() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(firebaseReady);
 
-  const [activating, setActivating] = useState(false);
-  const [activateError, setActivateError] = useState("");
-
   const [authPage, setAuthPage] = useState("login");
   const [splashDone, setSplashDone] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -45,6 +42,7 @@ function App() {
     let mounted = true;
 
     let adminUnsubscribe = null;
+    let autoCreateAttemptedUid = null;
 
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (adminUnsubscribe) {
@@ -84,6 +82,25 @@ function App() {
           } else {
             setIsAdmin(false);
             setOwnerProfile(null);
+
+            // No owner record yet (e.g. an account created before
+            // signup made one automatically): create it silently
+            // from the signed-in profile. The listener re-fires
+            // when it lands and opens the gate by itself.
+            if (
+              !adminSnap.exists() &&
+              autoCreateAttemptedUid !== currentUser.uid
+            ) {
+              autoCreateAttemptedUid = currentUser.uid;
+              setDoc(adminRef, {
+                fullName: currentUser.displayName || "",
+                email: currentUser.email || "",
+                role: "owner",
+                createdAt: serverTimestamp(),
+              }).catch((error) =>
+                console.error("Owner auto-setup failed:", error)
+              );
+            }
           }
           setCheckingAuth(false);
         },
@@ -107,31 +124,6 @@ function App() {
     const timer = setTimeout(() => setSplashDone(true), 1600);
     return () => clearTimeout(timer);
   }, []);
-
-  // One-tap fix for accounts created before signup made the owner
-  // record automatically: create it now from the signed-in profile.
-  // The live owner listener above opens the gate as soon as it lands.
-  const handleActivateOwner = async () => {
-    if (!user) return;
-    setActivating(true);
-    setActivateError("");
-
-    try {
-      await setDoc(doc(db, "admins", user.uid), {
-        fullName: user.displayName || "",
-        email: user.email || "",
-        role: "owner",
-        createdAt: serverTimestamp(),
-      });
-    } catch (error) {
-      console.error("Owner activation failed:", error);
-      setActivateError(
-        "Could not activate this account. Please try again."
-      );
-    } finally {
-      setActivating(false);
-    }
-  };
 
   const handleLogout = async () => {
     try {
@@ -190,19 +182,6 @@ function App() {
         <p>
           This account is not authorized to access GymNexus.
         </p>
-        <p>
-          If this is a gym owner account, activate it to continue.
-        </p>
-        <button
-          className="activate-button"
-          onClick={handleActivateOwner}
-          disabled={activating}
-        >
-          {activating ? "Activating..." : "Activate owner access"}
-        </button>
-        {activateError && (
-          <p className="activate-error">{activateError}</p>
-        )}
         <button onClick={handleLogout}>Logout</button>
       </div>
     );

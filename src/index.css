@@ -194,25 +194,6 @@ a {
   font-size: 18px;
 }
 
-.loading-screen .activate-button {
-  padding: 12px 22px;
-  background: linear-gradient(135deg, #635bdb, #5046c5);
-  color: #fff;
-  border: none;
-  border-radius: 10px;
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.loading-screen .activate-button:disabled {
-  opacity: 0.7;
-  cursor: default;
-}
-
-.loading-screen .activate-error {
-  color: #dc2626;
-  font-size: 14px;
-}
 
 .splash-screen {
   min-height: 100vh;
