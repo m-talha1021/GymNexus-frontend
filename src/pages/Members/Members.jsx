@@ -27,6 +27,7 @@ import {
   Phone,
   ShieldCheck,
   UserRound,
+  CreditCard,
 } from "lucide-react";
 
 export default function Members() {
@@ -45,11 +46,14 @@ export default function Members() {
   const [editingMember, setEditingMember] = useState(null);
   const [saving, setSaving] = useState(false);
 
+  const [plans, setPlans] = useState([]);
+
   const emptyForm = {
     fullName: "",
     email: "",
     phone: "",
     role: "member",
+    planId: "",
   };
 
   const [formData, setFormData] = useState(emptyForm);
@@ -94,6 +98,46 @@ export default function Members() {
     return () => unsubscribe();
   }, [user?.uid]);
 
+  // LOAD MEMBERSHIP PLANS FROM FIRESTORE (for the plan picker)
+
+  useEffect(() => {
+    if (!user?.uid) {
+      return;
+    }
+
+    const plansQuery = query(
+      collection(db, "membershipPlans"),
+      where("ownerId", "==", user.uid)
+    );
+
+    const unsubscribe = onSnapshot(
+      plansQuery,
+      (snapshot) => {
+        const planData = snapshot.docs.map((item) => ({
+          id: item.id,
+          ...item.data(),
+        }));
+
+        planData.sort((a, b) =>
+          String(a.name || "").localeCompare(String(b.name || ""))
+        );
+
+        setPlans(planData);
+      },
+      (err) => {
+        console.error("Plans loading error:", err);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [user?.uid]);
+
+  const activePlans = useMemo(
+    () =>
+      plans.filter((plan) => (plan.status || "active") === "active"),
+    [plans]
+  );
+
   // SEARCH MEMBERS
 
   const filteredMembers = useMemo(() => {
@@ -108,6 +152,7 @@ export default function Members() {
         member.email,
         member.phone,
         member.role,
+        member.planName,
       ];
 
       return values.some((value) =>
@@ -135,6 +180,7 @@ export default function Members() {
       email: member.email || "",
       phone: member.phone || "",
       role: member.role || "member",
+      planId: member.planId || "",
     });
 
     setSelectedMember(null);
@@ -170,11 +216,18 @@ export default function Members() {
     setSaving(true);
     setError("");
 
+    const chosenPlan =
+      activePlans.find((plan) => plan.id === formData.planId) ||
+      plans.find((plan) => plan.id === formData.planId) ||
+      null;
+
     const memberData = {
       fullName: formData.fullName.trim(),
       email: formData.email.trim(),
       phone: formData.phone.trim(),
       role: formData.role,
+      planId: chosenPlan ? chosenPlan.id : "",
+      planName: chosenPlan ? chosenPlan.name : "",
       updatedAt: serverTimestamp(),
     };
 
@@ -460,6 +513,31 @@ export default function Members() {
                 onChange={handleChange}
               />
 
+              <label htmlFor="member-plan">Membership Plan</label>
+
+              <select
+                id="member-plan"
+                name="planId"
+                value={formData.planId}
+                onChange={handleChange}
+              >
+                <option value="">No plan</option>
+                {activePlans.map((plan) => (
+                  <option key={plan.id} value={plan.id}>
+                    {plan.name} — {plan.duration}{" "}
+                    {Number(plan.duration) === 1 ? "month" : "months"}
+                    {plan.price !== undefined && plan.price !== null
+                      ? ` (Rs. ${plan.price})`
+                      : ""}
+                  </option>
+                ))}
+              </select>
+
+              {plans.length === 0 && (
+                <p className="member-form-hint">
+                  No plans yet — create one in Memberships first.
+                </p>
+              )}
 
               <div className="member-form-actions">
                 <button
@@ -583,6 +661,21 @@ export default function Members() {
 
                 <strong>
                   {selectedMember.role || "member"}
+                </strong>
+              </div>
+
+              <div className="member-detail-row">
+                <span>
+                  <CreditCard size={16} />
+                  Plan
+                </span>
+
+                <strong>
+                  {selectedMember.planName ||
+                    plans.find(
+                      (plan) => plan.id === selectedMember.planId
+                    )?.name ||
+                    "No plan"}
                 </strong>
               </div>
 
