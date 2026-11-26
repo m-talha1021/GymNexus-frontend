@@ -3432,11 +3432,12 @@ img {
 }
 
 .back-button {
-  display: inline-flex;
+  display: flex;
+  width: fit-content;
   align-items: center;
   gap: 6px;
   padding: 8px 14px;
-  margin-bottom: 16px;
+  margin: 0 0 16px auto;
   background: #fff;
   border: 1.5px solid #e2e8f0;
   border-radius: 8px;
