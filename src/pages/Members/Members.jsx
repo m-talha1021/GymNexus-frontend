@@ -391,7 +391,7 @@ export default function Members() {
       <div className="members-toolbar">
 
         <div className="members-search-wrapper">
-          <Search size={18} />
+          <Search size={16} />
 
           <input
             type="text"

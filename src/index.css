@@ -1869,25 +1869,38 @@ tbody tr:last-child td {
 .members-search-wrapper {
   display: flex;
   align-items: center;
-  gap: 10px;
-  width: 360px;
+  gap: 8px;
+  width: 280px;
   max-width: 100%;
-  padding: 0 14px;
+  padding: 0 12px;
   background: white;
   border: 1px solid #e2e8f0;
-  border-radius: 9px;
+  border-radius: 8px;
   color: #94a3b8;
 }
 
 .members-search {
   width: 100%;
   min-width: 0;
-  height: 44px;
+  height: 36px;
   border: none;
   outline: none;
   background: transparent;
-  font-size: 14px;
+  font-size: 13px;
   color: #1e293b;
+}
+
+/* The input must not draw its own border: the generic
+   ".members-page input" rule gives every page input a border,
+   which made the search box look double-bordered inside its
+   wrapper. Only the wrapper carries the border now. */
+.members-search-wrapper .members-search {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
 }
 
 .members-search:focus {
