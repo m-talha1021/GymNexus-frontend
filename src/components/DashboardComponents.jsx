@@ -443,10 +443,14 @@ export function Header({
                         <strong>Payment received</strong>
 
                         <p>
-                          {paymentName(payment)} paid{" "}
-                          {money(
-                            payment.amount || payment.paidAmount
-                          )}
+                          {paymentName(payment)} paid
+                          {Number(
+                            payment.amount || payment.paidAmount || 0
+                          ) > 0
+                            ? ` ${money(
+                                payment.amount || payment.paidAmount
+                              )}`
+                            : ""}
                         </p>
 
                         <small>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   addDoc,
@@ -74,6 +74,8 @@ export default function Payments() {
 
   const [members, setMembers] = useState([]);
   const [payments, setPayments] = useState([]);
+  const [plans, setPlans] = useState([]);
+  const repairedPayments = useRef(new Set());
   const [loading, setLoading] = useState(() => Boolean(user?.uid));
   const [error, setError] = useState(() =>
     user?.uid ? "" : "Please log in to view payments."
@@ -130,11 +132,65 @@ export default function Payments() {
       }
     );
 
+    const unsubPlans = onSnapshot(
+      byOwner("membershipPlans"),
+      (snapshot) => {
+        setPlans(
+          snapshot.docs.map((item) => ({ id: item.id, ...item.data() }))
+        );
+      },
+      (err) => {
+        console.error("Plans loading error:", err);
+      }
+    );
+
     return () => {
       unsubMembers();
       unsubPayments();
+      unsubPlans();
     };
   }, [user?.uid]);
+
+  // The price of the plan a member is on (by id, falling back to the
+  // stored plan name). Used for the payment amount.
+  const planForMember = (member) => {
+    if (!member) return null;
+    return (
+      plans.find((plan) => plan.id === member.planId) ||
+      plans.find((plan) => plan.name === member.planName) ||
+      null
+    );
+  };
+
+  // One-time repair: older paid records were saved without an amount
+  // (the old "just mark paid" flow). Fill it in from the member's
+  // plan price so the notification shows the real amount. Each
+  // record is attempted once; afterwards it already has an amount.
+  useEffect(() => {
+    if (!user?.uid || plans.length === 0) return;
+
+    for (const payment of payments) {
+      if (payment.status !== "paid") continue;
+      if (Number(payment.amount || payment.paidAmount || 0) > 0) continue;
+      if (repairedPayments.current.has(payment.id)) continue;
+
+      const member = members.find((m) => m.id === payment.memberId);
+      const plan = planForMember(member) ||
+        plans.find((item) => item.id === payment.planId) ||
+        plans.find((item) => item.name === payment.planName);
+      if (!plan || !(Number(plan.price) > 0)) continue;
+
+      repairedPayments.current.add(payment.id);
+      updateDoc(doc(db, "payments", payment.id), {
+        amount: Number(plan.price),
+        planId: plan.id,
+        planName: plan.name,
+        updatedAt: serverTimestamp(),
+      }).catch((err) =>
+        console.error("Backfilling payment amount failed:", err)
+      );
+    }
+  }, [payments, members, plans, user?.uid]);
 
   // THIS MONTH'S PAYMENT STATUS PER MEMBER
 
@@ -210,7 +266,8 @@ export default function Payments() {
           `${member.fullName || "Member"} marked as not paid for ${monthLabel()}.`
         );
       } else {
-        // Mark done: record the payment and extend the membership
+        // Mark done: record the payment (with the price of the
+        // member's plan as the amount) and extend the membership
         // by one month (from the current expiry if it is still in
         // the future, otherwise from today).
         const now = new Date();
@@ -221,20 +278,31 @@ export default function Payments() {
         const newExpiry = new Date(start);
         newExpiry.setMonth(newExpiry.getMonth() + 1);
 
+        const plan = planForMember(member);
+        const amount =
+          plan && Number(plan.price) > 0 ? Number(plan.price) : null;
+        const paymentDetails = {
+          status: "paid",
+          paidAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          ...(amount !== null
+            ? {
+                amount,
+                planId: plan.id,
+                planName: plan.name,
+              }
+            : {}),
+        };
+
         if (existing) {
-          await updateDoc(doc(db, "payments", existing.id), {
-            status: "paid",
-            paidAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-          });
+          await updateDoc(doc(db, "payments", existing.id), paymentDetails);
         } else {
           await addDoc(collection(db, "payments"), {
             ownerId: user.uid,
             memberId: member.id,
             memberName: member.fullName || member.name || "",
             month: currentMonth,
-            status: "paid",
-            paidAt: serverTimestamp(),
+            ...paymentDetails,
             createdAt: serverTimestamp(),
           });
         }
@@ -246,7 +314,9 @@ export default function Payments() {
         });
 
         setNotice(
-          `${member.fullName || "Member"} marked as paid for ${monthLabel()} — membership now runs until ${formatDate(newExpiry)}.`
+          `${member.fullName || "Member"} marked as paid for ${monthLabel()}${
+            amount !== null ? ` — Rs. ${amount.toLocaleString("en-IN")}` : ""
+          } — membership now runs until ${formatDate(newExpiry)}.`
         );
       }
     } catch (err) {
