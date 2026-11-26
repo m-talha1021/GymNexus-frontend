@@ -21,6 +21,7 @@ import {
   Bell,
   MessageCircle,
   CheckCircle2,
+  Package,
 } from "lucide-react";
 
 // Payments page (no backend needed): the owner simply marks each
@@ -538,6 +539,11 @@ export default function Payments({ onNavigate, ownerProfile }) {
                 </div>
 
                 <h3>{member.fullName || member.name || "Unnamed"}</h3>
+
+                <p>
+                  <Package size={15} />
+                  Plan: {member.planName || "No plan"}
+                </p>
 
                 <p>
                   Membership ends {formatDate(
