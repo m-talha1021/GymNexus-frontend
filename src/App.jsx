@@ -18,12 +18,7 @@ import Signup from "./pages/Auth/Signup.jsx";
 import Members from "./pages/Members/Members.jsx";
 import Memberships from "./pages/Memberships/Memberships.jsx";
 import Payments from "./pages/Payments/Payments.jsx";
-
-// Sidebar destinations that do not have a dedicated page yet.
-// They render a simple notice instead of a blank content area.
-const PLACEHOLDER_PAGES = {
-  inquiries: "Inquiries",
-};
+import Inquiries from "./pages/Inquiries/Inquiries.jsx";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -238,16 +233,8 @@ function App() {
             <Payments />
           )}
 
-          {PLACEHOLDER_PAGES[activePage] && (
-            <div className="dashboard-content">
-              <div className="dashboard-panel placeholder-panel">
-                <h3>{PLACEHOLDER_PAGES[activePage]}</h3>
-                <p>
-                  This section has not been built yet. It will
-                  appear here in a future update.
-                </p>
-              </div>
-            </div>
+          {activePage === "inquiries" && (
+            <Inquiries />
           )}
 
         </div>
