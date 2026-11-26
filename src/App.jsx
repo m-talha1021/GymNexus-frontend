@@ -238,6 +238,10 @@ function App() {
           )}
 
         </div>
+
+        <footer className="app-footer">
+          Developed by: <strong>M. Talha</strong>
+        </footer>
       </main>
     </div>
   );
