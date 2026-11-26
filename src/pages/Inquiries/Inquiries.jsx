@@ -15,6 +15,7 @@ import {
 import { auth, db } from "../../firebase/config";
 
 import {
+  ArrowLeft,
   Plus,
   Search,
   Trash2,
@@ -66,7 +67,7 @@ const STATUS_LABELS = {
   closed: "Closed",
 };
 
-export default function Inquiries() {
+export default function Inquiries({ onNavigate }) {
   const user = auth.currentUser;
 
   const [inquiries, setInquiries] = useState([]);
@@ -338,6 +339,15 @@ export default function Inquiries() {
 
   return (
     <div className="members-page">
+
+      <button
+        type="button"
+        className="back-button"
+        onClick={() => onNavigate?.("dashboard")}
+      >
+        <ArrowLeft size={17} />
+        Back
+      </button>
       <div className="members-header">
         <div>
           <h2>Inquiries</h2>

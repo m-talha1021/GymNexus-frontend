@@ -14,6 +14,7 @@ import {
 import { auth, db } from "../../firebase/config";
 
 import {
+  ArrowLeft,
   Search,
   Wallet,
   X,
@@ -69,7 +70,7 @@ const monthKey = (date = new Date()) =>
 const monthLabel = (date = new Date()) =>
   date.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
 
-export default function Payments() {
+export default function Payments({ onNavigate }) {
   const user = auth.currentUser;
 
   const [members, setMembers] = useState([]);
@@ -385,6 +386,15 @@ export default function Payments() {
 
   return (
     <div className="members-page">
+
+      <button
+        type="button"
+        className="back-button"
+        onClick={() => onNavigate?.("dashboard")}
+      >
+        <ArrowLeft size={17} />
+        Back
+      </button>
       <div className="members-header">
         <div>
           <h2>Payments — {monthLabel()}</h2>

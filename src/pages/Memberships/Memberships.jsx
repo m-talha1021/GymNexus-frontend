@@ -16,6 +16,7 @@ import {
 import { auth, db } from "../../firebase/config";
 
 import {
+  ArrowLeft,
   Plus,
   Search,
   Eye,
@@ -28,7 +29,7 @@ import {
   Power,
 } from "lucide-react";
 
-export default function Memberships() {
+export default function Memberships({ onNavigate }) {
   const user = auth.currentUser;
 
   const [plans, setPlans] = useState([]);
@@ -273,6 +274,15 @@ export default function Memberships() {
 
   return (
     <div className="memberships-page">
+
+      <button
+        type="button"
+        className="back-button"
+        onClick={() => onNavigate?.("dashboard")}
+      >
+        <ArrowLeft size={17} />
+        Back
+      </button>
 
       {/* HEADER */}
 

@@ -222,19 +222,19 @@ function App() {
           )}
 
           {activePage === "members" && (
-            <Members />
+            <Members onNavigate={handleNavigation} />
           )}
 
           {activePage === "packages" && (
-            <Memberships />
+            <Memberships onNavigate={handleNavigation} />
           )}
 
           {activePage === "payments" && (
-            <Payments />
+            <Payments onNavigate={handleNavigation} />
           )}
 
           {activePage === "inquiries" && (
-            <Inquiries />
+            <Inquiries onNavigate={handleNavigation} />
           )}
 
         </div>

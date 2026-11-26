@@ -16,6 +16,7 @@ import {
 import { auth, db } from "../../firebase/config";
 
 import {
+  ArrowLeft,
   Plus,
   Search,
   Eye,
@@ -35,7 +36,7 @@ const memberIdPattern = /^GYM-(\d+)$/;
 const timeOf = (value) =>
   typeof value?.toDate === "function" ? value.toDate().getTime() : 0;
 
-export default function Members() {
+export default function Members({ onNavigate }) {
   const user = auth.currentUser;
 
   const [members, setMembers] = useState([]);
@@ -352,6 +353,15 @@ export default function Members() {
 
   return (
     <div className="members-page">
+
+      <button
+        type="button"
+        className="back-button"
+        onClick={() => onNavigate?.("dashboard")}
+      >
+        <ArrowLeft size={17} />
+        Back
+      </button>
 
       {/* PAGE HEADER */}
 
