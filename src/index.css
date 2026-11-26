@@ -715,6 +715,41 @@ button {
   font-size: 11px;
 }
 
+.stat-card-clickable {
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  width: 100%;
+}
+
+.expiring-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.expiring-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 2px;
+  border-bottom: 1px solid #f0f2f6;
+}
+
+.expiring-row:last-child {
+  border-bottom: 0;
+}
+
+.expiring-row strong {
+  font-size: 14px;
+  color: #172033;
+}
+
+.expiring-row span {
+  font-size: 13px;
+  color: #536075;
+}
+
 /* ================================
    DASHBOARD GRID
 ================================ */

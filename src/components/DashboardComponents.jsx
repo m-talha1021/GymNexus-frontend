@@ -514,9 +514,10 @@ function StatCard({
   change,
   icon: Icon,
   color,
+  onClick,
 }) {
-  return (
-    <div className="stat-card">
+  const content = (
+    <>
       <div className={`stat-icon ${color}`}>
         <Icon size={23} />
       </div>
@@ -526,8 +527,22 @@ function StatCard({
       <h2>{value}</h2>
 
       <span className="stat-change">{change}</span>
-    </div>
+    </>
   );
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        className="stat-card stat-card-clickable"
+        onClick={onClick}
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return <div className="stat-card">{content}</div>;
 }
 
 // DASHBOARD — LIVE FIRESTORE DATA
@@ -537,6 +552,7 @@ export function Dashboard({ user, onNavigate }) {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(() => Boolean(user?.uid));
   const [error, setError] = useState("");
+  const [showExpiring, setShowExpiring] = useState(false);
 
   useEffect(() => {
     if (!user?.uid) {
@@ -689,11 +705,30 @@ export function Dashboard({ user, onNavigate }) {
       })
       .sort((a, b) => a.expiry - b.expiry);
 
+    const expiringSoon = members
+      .map((member) => ({
+        ...member,
+        expiry: asDate(
+          member.membershipExpiryDate || member.expiryDate
+        ),
+      }))
+      .filter((member) => {
+        if (!member.expiry) return false;
+
+        const days = Math.ceil(
+          (member.expiry - now) / 86400000
+        );
+
+        return days >= 0 && days <= 2;
+      })
+      .sort((a, b) => a.expiry - b.expiry);
+
     return {
       activeMembers,
       pendingPayments,
       recentMembers,
       upcoming,
+      expiringSoon,
     };
   }, [members, payments]);
 
@@ -780,6 +815,15 @@ export function Dashboard({ user, onNavigate }) {
           icon={AlertCircle}
           color="orange"
         />
+
+        <StatCard
+          title="Expiring in 2 Days"
+          value={stats.expiringSoon.length}
+          change="Memberships ending soon"
+          icon={CalendarClock}
+          color="purple"
+          onClick={() => setShowExpiring(true)}
+        />
       </div>
 
       {/* DASHBOARD GRID */}
@@ -837,7 +881,8 @@ export function Dashboard({ user, onNavigate }) {
                         </td>
 
                         <td>
-                          {member.packageName ||
+                          {member.planName ||
+                            member.packageName ||
                             member.package ||
                             member.packageId ||
                             "—"}
@@ -927,6 +972,62 @@ export function Dashboard({ user, onNavigate }) {
           )}
         </section>
       </div>
+
+      {/* EXPIRING IN 2 DAYS — MEMBER LIST */}
+
+      {showExpiring && (
+        <div
+          className="member-modal-overlay"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowExpiring(false);
+            }
+          }}
+        >
+          <div className="member-modal">
+            <div className="member-modal-header">
+              <div>
+                <h2>Expiring in 2 Days</h2>
+                <p>Memberships ending within 2 days.</p>
+              </div>
+
+              <button
+                type="button"
+                className="member-modal-close"
+                onClick={() => setShowExpiring(false)}
+                aria-label="Close"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {stats.expiringSoon.length === 0 ? (
+              <p className="empty-expiry">
+                No memberships expiring in the next 2 days.
+              </p>
+            ) : (
+              <div className="expiring-list">
+                {stats.expiringSoon.map((member) => (
+                  <div className="expiring-row" key={member.id}>
+                    <strong>{memberName(member)}</strong>
+                    <span>{member.phone || "No phone"}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="member-modal-actions">
+              <button
+                type="button"
+                className="modal-close-btn"
+                onClick={() => setShowExpiring(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
