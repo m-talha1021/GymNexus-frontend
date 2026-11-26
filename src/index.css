@@ -965,10 +965,10 @@ tbody tr:last-child td {
     justify-content: center;
     width: 38px;
     height: 38px;
-    background: rgba(255, 255, 255, 0.12);
+    background: #fff;
     border: none;
     border-radius: 8px;
-    color: #fff;
+    color: #1e1b4b;
     flex-shrink: 0;
   }
 
