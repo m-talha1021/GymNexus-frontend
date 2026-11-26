@@ -218,6 +218,7 @@ function App() {
             <Dashboard
               user={user}
               onNavigate={handleNavigation}
+              ownerProfile={ownerProfile}
             />
           )}
 

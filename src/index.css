@@ -759,6 +759,13 @@ button {
   border-bottom: 0;
 }
 
+.expiring-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
 .expiring-row strong {
   font-size: 14px;
   color: #172033;
@@ -3371,6 +3378,12 @@ img {
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
+}
+
+.reminder-send-btn:disabled {
+  background: #f1f5f9;
+  color: #64748b;
+  cursor: not-allowed;
 }
 
 .reminder-send-btn:hover:not(:disabled) {

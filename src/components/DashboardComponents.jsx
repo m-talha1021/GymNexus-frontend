@@ -16,14 +16,17 @@ import {
   Trash2,
   X,
   CalendarClock,
+  MessageCircle,
 } from "lucide-react";
 
 import {
+  addDoc,
   collection,
   deleteDoc,
   doc,
   onSnapshot,
   query,
+  serverTimestamp,
   updateDoc,
   where,
 } from "firebase/firestore";
@@ -49,6 +52,22 @@ const asDate = (value) => {
 
 const memberName = (member) =>
   member.fullName || member.name || "Unnamed member";
+
+const toWaNumber = (phone) => {
+  const digits = String(phone || "").replace(/\D/g, "");
+  if (!digits) return null;
+  if (digits.startsWith("92")) return digits;
+  if (digits.startsWith("0")) return `92${digits.slice(1)}`;
+  return digits;
+};
+
+const buildReminderMessage = (member, expiry, senderName) =>
+  `Hi ${member.fullName || member.name || "member"}! This is a reminder ` +
+  `from ${senderName || "your gym"} — your gym membership expires on ${expiry.toLocaleDateString(
+    "en-GB",
+    { day: "numeric", month: "long", year: "numeric" }
+  )}. Please visit the gym or reply to this message to renew and keep ` +
+  `training. Thank you!`;
 
 const paymentName = (payment) =>
   payment.memberName ||
@@ -547,12 +566,14 @@ function StatCard({
 
 // DASHBOARD — LIVE FIRESTORE DATA
 
-export function Dashboard({ user, onNavigate }) {
+export function Dashboard({ user, onNavigate, ownerProfile }) {
   const [members, setMembers] = useState([]);
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(() => Boolean(user?.uid));
   const [error, setError] = useState("");
   const [showExpiring, setShowExpiring] = useState(false);
+  const [sendingReminderId, setSendingReminderId] = useState("");
+  const [reminderError, setReminderError] = useState("");
 
   useEffect(() => {
     if (!user?.uid) {
@@ -734,6 +755,60 @@ export function Dashboard({ user, onNavigate }) {
       expiringSoon,
     };
   }, [members, payments]);
+
+  // WHATSAPP REMINDER FOR MEMBERS EXPIRING IN 2 DAYS
+
+  const remindedToday = (member) => {
+    const sentAt = asDate(member.lastReminderSentAt);
+    if (!sentAt) return false;
+    return sentAt.toDateString() === new Date().toDateString();
+  };
+
+  const sendExpiringReminder = async (member) => {
+    const waNumber = toWaNumber(member.phone);
+    if (!waNumber) return;
+
+    const ownerName =
+      ownerProfile?.fullName || user?.displayName || "";
+    const message = buildReminderMessage(
+      member,
+      member.expiry,
+      ownerName
+    );
+    const whatsappUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(
+      message
+    )}`;
+
+    setSendingReminderId(member.id);
+    setReminderError("");
+    try {
+      // Record that the reminder was sent, so the Payments page
+      // shows "Reminder sent today" and it is not sent twice.
+      await addDoc(collection(db, "reminders"), {
+        ownerId: user.uid,
+        memberId: member.id,
+        memberName: member.fullName || member.name || "",
+        phone: member.phone || "",
+        channel: "whatsapp",
+        message,
+        expiryDate: member.expiry.toISOString(),
+        sentAt: serverTimestamp(),
+        sentBy: "manual",
+      });
+      await updateDoc(doc(db, "members", member.id), {
+        lastReminderSentAt: serverTimestamp(),
+      });
+      window.open(whatsappUrl, "_blank", "noopener");
+    } catch (err) {
+      console.error("Reminder failed:", err);
+      setReminderError(
+        "Could not record the reminder. Opening WhatsApp anyway."
+      );
+      window.open(whatsappUrl, "_blank", "noopener");
+    } finally {
+      setSendingReminderId("");
+    }
+  };
 
   // DELETE MEMBER
 
@@ -1004,18 +1079,52 @@ export function Dashboard({ user, onNavigate }) {
               </button>
             </div>
 
+            {reminderError && (
+              <p className="members-error">{reminderError}</p>
+            )}
+
             {stats.expiringSoon.length === 0 ? (
               <p className="empty-expiry">
                 No memberships expiring in the next 2 days.
               </p>
             ) : (
               <div className="expiring-list">
-                {stats.expiringSoon.map((member) => (
-                  <div className="expiring-row" key={member.id}>
-                    <strong>{memberName(member)}</strong>
-                    <span>{member.phone || "No phone"}</span>
-                  </div>
-                ))}
+                {stats.expiringSoon.map((member) => {
+                  const sentToday = remindedToday(member);
+                  return (
+                    <div className="expiring-row" key={member.id}>
+                      <div className="expiring-info">
+                        <strong>{memberName(member)}</strong>
+                        <span>{member.phone || "No phone"}</span>
+                      </div>
+
+                      <button
+                        type="button"
+                        className="reminder-send-btn"
+                        onClick={() => sendExpiringReminder(member)}
+                        disabled={
+                          sentToday ||
+                          !member.phone ||
+                          sendingReminderId === member.id
+                        }
+                        title={
+                          sentToday
+                            ? "Reminder already sent today"
+                            : !member.phone
+                              ? "No phone number saved"
+                              : "Send WhatsApp reminder"
+                        }
+                      >
+                        <MessageCircle size={15} />
+                        {sendingReminderId === member.id
+                          ? "Sending..."
+                          : sentToday
+                            ? "Sent today"
+                            : "WhatsApp"}
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             )}
 
