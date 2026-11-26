@@ -1084,6 +1084,7 @@ tbody tr:last-child td {
   border: 1px solid #e7ebf2;
   border-radius: 13px;
   background: #fff;
+  color: #172033;
   box-shadow: 0 16px 45px rgba(17, 24, 39, .16);
 }
 .notification-heading {
@@ -1141,7 +1142,7 @@ tbody tr:last-child td {
   color: #15803d;
   background: #e5f8ed;
 }
-.notification-item strong { font-size: 12px; }
+.notification-item strong { font-size: 12px; color: #15803d; }
 .notification-item p {
   margin-top: 4px;
   color: #536075;
