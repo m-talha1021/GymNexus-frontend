@@ -854,7 +854,7 @@ export function Dashboard({ user, onNavigate }) {
                 <tr>
                   <th>Member</th>
                   <th>Member ID</th>
-                  <th>Package</th>
+                  <th>Plan</th>
                   <th>Status</th>
                   <th>Action</th>
                 </tr>
