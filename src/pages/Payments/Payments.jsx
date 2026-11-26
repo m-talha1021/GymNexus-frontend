@@ -56,9 +56,9 @@ const toWaNumber = (phone) => {
   return digits;
 };
 
-const buildReminderMessage = (member, expiry) =>
+const buildReminderMessage = (member, expiry, senderName) =>
   `Hi ${member.fullName || member.name || "member"}! This is a reminder ` +
-  `from GymNexus — your gym membership expires on ${expiry.toLocaleDateString(
+  `from ${senderName || "your gym"} — your gym membership expires on ${expiry.toLocaleDateString(
     "en-GB",
     { day: "numeric", month: "long", year: "numeric" }
   )}. Please visit the gym or reply to this message to renew and keep ` +
@@ -70,7 +70,7 @@ const monthKey = (date = new Date()) =>
 const monthLabel = (date = new Date()) =>
   date.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
 
-export default function Payments({ onNavigate }) {
+export default function Payments({ onNavigate, ownerProfile }) {
   const user = auth.currentUser;
 
   const [members, setMembers] = useState([]);
@@ -342,7 +342,8 @@ export default function Payments({ onNavigate }) {
       );
       return;
     }
-    const message = buildReminderMessage(member, member.expiry);
+    const ownerName = ownerProfile?.fullName || user?.displayName || "";
+    const message = buildReminderMessage(member, member.expiry, ownerName);
     const whatsappUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`;
 
     setSendingId(member.id);

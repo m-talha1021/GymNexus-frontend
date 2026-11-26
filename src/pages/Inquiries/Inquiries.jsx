@@ -67,8 +67,12 @@ const STATUS_LABELS = {
   closed: "Closed",
 };
 
-export default function Inquiries({ onNavigate }) {
+export default function Inquiries({ onNavigate, ownerProfile }) {
   const user = auth.currentUser;
+
+  // The owner's name goes in WhatsApp messages instead of the
+  // app name "GymNexus".
+  const ownerName = ownerProfile?.fullName || user?.displayName || "";
 
   const [inquiries, setInquiries] = useState([]);
   const [plans, setPlans] = useState([]);
@@ -307,10 +311,12 @@ export default function Inquiries({ onNavigate }) {
       );
       return;
     }
-    const message =
-      `Hi ${inquiry.name || ""}! Thanks for reaching out to ` +
-      `GymNexus${inquiry.planName ? ` about the ${inquiry.planName} plan` : ""}. ` +
-      `How can we help you?`;
+    let message = `Hi ${inquiry.name || ""}! Thanks for reaching out.`;
+    if (ownerName) message += ` This is ${ownerName}.`;
+    if (inquiry.planName) {
+      message += ` You asked about the ${inquiry.planName} plan.`;
+    }
+    message += ` How can I help you?`;
     window.open(
       `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`,
       "_blank",

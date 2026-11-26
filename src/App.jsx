@@ -230,11 +230,11 @@ function App() {
           )}
 
           {activePage === "payments" && (
-            <Payments onNavigate={handleNavigation} />
+            <Payments onNavigate={handleNavigation} ownerProfile={ownerProfile} />
           )}
 
           {activePage === "inquiries" && (
-            <Inquiries onNavigate={handleNavigation} />
+            <Inquiries onNavigate={handleNavigation} ownerProfile={ownerProfile} />
           )}
 
         </div>
