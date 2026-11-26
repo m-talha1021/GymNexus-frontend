@@ -58,7 +58,8 @@ const toWaNumber = (phone) => {
 
 const buildReminderMessage = (member, expiry, senderName) =>
   `Hi ${member.fullName || member.name || "member"}! This is a reminder ` +
-  `from ${senderName || "your gym"} — your gym membership expires on ${expiry.toLocaleDateString(
+  `from ${senderName || "your gym"} — your ` +
+  `${member.planName ? `${member.planName} plan ` : ""}membership expires on ${expiry.toLocaleDateString(
     "en-GB",
     { day: "numeric", month: "long", year: "numeric" }
   )}. Please visit the gym or reply to this message to renew and keep ` +
@@ -342,7 +343,11 @@ export default function Payments({ onNavigate, ownerProfile }) {
       );
       return;
     }
-    const ownerName = ownerProfile?.fullName || user?.displayName || "";
+    const ownerName =
+      ownerProfile?.gymName ||
+      ownerProfile?.fullName ||
+      user?.displayName ||
+      "";
     const message = buildReminderMessage(member, member.expiry, ownerName);
     const whatsappUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`;
 
