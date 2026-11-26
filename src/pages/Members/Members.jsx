@@ -1,5 +1,5 @@
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   addDoc,
@@ -30,6 +30,11 @@ import {
   CreditCard,
 } from "lucide-react";
 
+const memberIdPattern = /^GYM-(\d+)$/;
+
+const timeOf = (value) =>
+  typeof value?.toDate === "function" ? value.toDate().getTime() : 0;
+
 export default function Members() {
   const user = auth.currentUser;
 
@@ -57,6 +62,24 @@ export default function Members() {
   };
 
   const [formData, setFormData] = useState(emptyForm);
+
+  // IDs already handed out in this session (covers the gap between
+  // saving a member and the live list updating, so two quick adds
+  // never get the same number).
+  const reservedMemberIds = useRef(new Set());
+  const repairedMemberIds = useRef(new Set());
+
+  // Next simple member ID: one past the highest GYM-### in use.
+  const nextMemberId = (list) => {
+    let max = 0;
+    const consider = (value) => {
+      const match = String(value || "").match(memberIdPattern);
+      if (match) max = Math.max(max, Number(match[1]));
+    };
+    for (const member of list) consider(member.memberId);
+    reservedMemberIds.current.forEach(consider);
+    return `GYM-${String(max + 1).padStart(3, "0")}`;
+  };
 
   // LOAD MEMBERS FROM FIRESTORE
 
@@ -97,6 +120,35 @@ export default function Members() {
 
     return () => unsubscribe();
   }, [user?.uid]);
+
+  // One-time repair: members created before simple IDs get one now,
+  // oldest first, continuing from the highest number in use.
+  useEffect(() => {
+    if (!user?.uid || members.length === 0) return;
+
+    const missing = members.filter(
+      (member) =>
+        !memberIdPattern.test(String(member.memberId || "")) &&
+        !repairedMemberIds.current.has(member.id)
+    );
+    if (missing.length === 0) return;
+
+    const ordered = [...missing].sort(
+      (a, b) => timeOf(a.createdAt) - timeOf(b.createdAt)
+    );
+
+    for (const member of ordered) {
+      const memberId = nextMemberId(members);
+      reservedMemberIds.current.add(memberId);
+      repairedMemberIds.current.add(member.id);
+      updateDoc(doc(db, "members", member.id), {
+        memberId,
+        updatedAt: serverTimestamp(),
+      }).catch((err) =>
+        console.error("Backfilling member ID failed:", err)
+      );
+    }
+  }, [members, user?.uid]);
 
   // LOAD MEMBERSHIP PLANS FROM FIRESTORE (for the plan picker)
 
@@ -153,6 +205,7 @@ export default function Members() {
         member.phone,
         member.role,
         member.planName,
+        member.memberId,
       ];
 
       return values.some((value) =>
@@ -221,11 +274,16 @@ export default function Members() {
       plans.find((plan) => plan.id === formData.planId) ||
       null;
 
+    const memberId =
+      editingMember?.memberId || nextMemberId(members);
+    reservedMemberIds.current.add(memberId);
+
     const memberData = {
       fullName: formData.fullName.trim(),
       email: formData.email.trim(),
       phone: formData.phone.trim(),
       role: formData.role,
+      memberId,
       planId: chosenPlan ? chosenPlan.id : "",
       planName: chosenPlan ? chosenPlan.name : "",
       updatedAt: serverTimestamp(),
@@ -681,7 +739,9 @@ export default function Members() {
 
               <div className="member-detail-row">
                 <span>Member ID</span>
-                <strong>{selectedMember.id}</strong>
+                <strong>
+                  {selectedMember.memberId || selectedMember.id}
+                </strong>
               </div>
 
             </div>

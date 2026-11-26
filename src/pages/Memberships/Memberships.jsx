@@ -279,7 +279,7 @@ export default function Memberships() {
       <div className="memberships-header">
         <div>
           <h2>Membership Plans</h2>
-          <p>Create and manage your gym subscription packages.</p>
+          <p>Create and manage your gym subscription plans.</p>
         </div>
 
         <button

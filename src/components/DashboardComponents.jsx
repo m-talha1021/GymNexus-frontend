@@ -101,7 +101,7 @@ export function Sidebar({
       icon: Wallet,
     },
     {
-      name: "Packages",
+      name: "Plans",
       page: "packages",
       icon: Package,
     },
@@ -321,7 +321,7 @@ export function Header({
     dashboard: "Dashboard",
     members: "Members",
     payments: "Payments",
-    packages: "Packages",
+    packages: "Plans",
     inquiries: "Inquiries",
   };
 
@@ -329,7 +329,7 @@ export function Header({
     dashboard: "Welcome back! Here's your gym overview.",
     members: "Manage and organize your gym members.",
     payments: "Manage your gym payments.",
-    packages: "Manage your membership packages.",
+    packages: "Manage your membership plans.",
     inquiries: "Manage your gym inquiries.",
   };
 
