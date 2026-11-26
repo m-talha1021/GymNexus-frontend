@@ -3481,6 +3481,22 @@ img {
   background: #15803d;
 }
 
+.payment-locked-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: none;
+  border-radius: 9px;
+  padding: 10px 12px;
+  font-size: 13.5px;
+  font-weight: 600;
+  background: #f1f5f9;
+  color: #64748b;
+  cursor: not-allowed;
+}
+
 .mark-unpaid-btn {
   background: #f1f5f9;
   color: #334155;

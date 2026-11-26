@@ -247,84 +247,83 @@ export default function Payments({ onNavigate }) {
     );
   }, [members, search]);
 
-  // MARK PAYMENT DONE / NOT DONE FOR THIS MONTH
+  // MARK PAYMENT PAID FOR THIS MONTH — ONE-WAY.
+  // A confirmation is asked first, and once a payment is marked
+  // paid it cannot be changed back to not paid, even by the owner.
 
-  const togglePayment = async (member) => {
+  const markPaid = async (member) => {
     if (!user?.uid) {
       setError("You must be logged in.");
       return;
     }
     const existing = paymentByMember[member.id];
-    const isPaid = existing?.status === "paid";
+    if (existing?.status === "paid") return;
+
+    const plan = planForMember(member);
+    const amount =
+      plan && Number(plan.price) > 0 ? Number(plan.price) : null;
+    const confirmed = window.confirm(
+      `Mark ${member.fullName || member.name || "this member"} as paid for ${monthLabel()}` +
+        (amount !== null
+          ? ` (Rs. ${amount.toLocaleString("en-IN")})`
+          : "") +
+        `? Once marked paid, this cannot be changed.`
+    );
+    if (!confirmed) return;
 
     setSavingId(member.id);
     setError("");
 
     try {
-      if (isPaid) {
-        // Mark not done.
-        await updateDoc(doc(db, "payments", existing.id), {
-          status: "pending",
-          paidAt: null,
-          updatedAt: serverTimestamp(),
-        });
-        setNotice(
-          `${member.fullName || "Member"} marked as not paid for ${monthLabel()}.`
-        );
+      // Record the payment (with the price of the member's plan
+      // as the amount) and extend the membership by one month
+      // (from the current expiry if it is still in the future,
+      // otherwise from today).
+      const now = new Date();
+      const currentExpiry = asDate(
+        member.membershipExpiryDate || member.expiryDate
+      );
+      const start = currentExpiry && currentExpiry > now ? currentExpiry : now;
+      const newExpiry = new Date(start);
+      newExpiry.setMonth(newExpiry.getMonth() + 1);
+
+      const paymentDetails = {
+        status: "paid",
+        paidAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        ...(amount !== null
+          ? {
+              amount,
+              planId: plan.id,
+              planName: plan.name,
+            }
+          : {}),
+      };
+
+      if (existing) {
+        await updateDoc(doc(db, "payments", existing.id), paymentDetails);
       } else {
-        // Mark done: record the payment (with the price of the
-        // member's plan as the amount) and extend the membership
-        // by one month (from the current expiry if it is still in
-        // the future, otherwise from today).
-        const now = new Date();
-        const currentExpiry = asDate(
-          member.membershipExpiryDate || member.expiryDate
-        );
-        const start = currentExpiry && currentExpiry > now ? currentExpiry : now;
-        const newExpiry = new Date(start);
-        newExpiry.setMonth(newExpiry.getMonth() + 1);
-
-        const plan = planForMember(member);
-        const amount =
-          plan && Number(plan.price) > 0 ? Number(plan.price) : null;
-        const paymentDetails = {
-          status: "paid",
-          paidAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-          ...(amount !== null
-            ? {
-                amount,
-                planId: plan.id,
-                planName: plan.name,
-              }
-            : {}),
-        };
-
-        if (existing) {
-          await updateDoc(doc(db, "payments", existing.id), paymentDetails);
-        } else {
-          await addDoc(collection(db, "payments"), {
-            ownerId: user.uid,
-            memberId: member.id,
-            memberName: member.fullName || member.name || "",
-            month: currentMonth,
-            ...paymentDetails,
-            createdAt: serverTimestamp(),
-          });
-        }
-
-        await updateDoc(doc(db, "members", member.id), {
-          membershipExpiryDate: newExpiry.toISOString(),
-          membershipStatus: "active",
-          updatedAt: serverTimestamp(),
+        await addDoc(collection(db, "payments"), {
+          ownerId: user.uid,
+          memberId: member.id,
+          memberName: member.fullName || member.name || "",
+          month: currentMonth,
+          ...paymentDetails,
+          createdAt: serverTimestamp(),
         });
-
-        setNotice(
-          `${member.fullName || "Member"} marked as paid for ${monthLabel()}${
-            amount !== null ? ` — Rs. ${amount.toLocaleString("en-IN")}` : ""
-          } — membership now runs until ${formatDate(newExpiry)}.`
-        );
       }
+
+      await updateDoc(doc(db, "members", member.id), {
+        membershipExpiryDate: newExpiry.toISOString(),
+        membershipStatus: "active",
+        updatedAt: serverTimestamp(),
+      });
+
+      setNotice(
+        `${member.fullName || "Member"} marked as paid for ${monthLabel()}${
+          amount !== null ? ` — Rs. ${amount.toLocaleString("en-IN")}` : ""
+        } — membership now runs until ${formatDate(newExpiry)}.`
+      );
     } catch (err) {
       console.error("Updating payment failed:", err);
       setError(err.message || "Unable to update payment.");
@@ -544,16 +543,26 @@ export default function Payments({ onNavigate }) {
                   <button
                     type="button"
                     className={
-                      isPaid ? "mark-unpaid-btn" : "mark-paid-btn"
+                      isPaid ? "payment-locked-btn" : "mark-paid-btn"
                     }
-                    onClick={() => togglePayment(member)}
-                    disabled={savingId === member.id}
+                    onClick={() => markPaid(member)}
+                    disabled={isPaid || savingId === member.id}
+                    title={
+                      isPaid
+                        ? "Paid payments cannot be changed"
+                        : undefined
+                    }
                   >
-                    {savingId === member.id
-                      ? "Saving..."
-                      : isPaid
-                      ? "Mark not paid"
-                      : "Mark paid"}
+                    {savingId === member.id ? (
+                      "Saving..."
+                    ) : isPaid ? (
+                      <>
+                        <CheckCircle2 size={15} />
+                        Paid
+                      </>
+                    ) : (
+                      "Mark paid"
+                    )}
                   </button>
                 </div>
               </div>
