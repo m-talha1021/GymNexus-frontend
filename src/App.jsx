@@ -87,8 +87,11 @@ function App() {
               autoCreateAttemptedUid !== currentUser.uid
             ) {
               autoCreateAttemptedUid = currentUser.uid;
+              // The gym name is the owner's name when no separate
+              // gym name was entered at signup.
               setDoc(adminRef, {
                 fullName: currentUser.displayName || "",
+                gymName: currentUser.displayName || "",
                 email: currentUser.email || "",
                 role: "owner",
                 createdAt: serverTimestamp(),

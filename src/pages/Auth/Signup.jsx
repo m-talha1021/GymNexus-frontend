@@ -7,6 +7,7 @@ import logo from "../../assets/logo.png";
 
 function Signup({ onSignupSuccess, onLogin }) {
   const [fullName, setFullName] = useState("");
+  const [gymName, setGymName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -35,6 +36,7 @@ function Signup({ onSignupSuccess, onLogin }) {
       try {
         await setDoc(doc(db, "admins", result.user.uid), {
           fullName,
+          gymName: gymName.trim(),
           email,
           role: "owner",
           createdAt: serverTimestamp(),
@@ -81,6 +83,15 @@ function Signup({ onSignupSuccess, onLogin }) {
           placeholder="Full Name"
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
+          required
+        />
+
+        <input
+          type="text"
+          aria-label="Gym Name"
+          placeholder="Gym Name"
+          value={gymName}
+          onChange={(e) => setGymName(e.target.value)}
           required
         />
 
