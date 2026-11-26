@@ -101,11 +101,17 @@ export default function Members() {
           ...item.data(),
         }));
 
-        memberData.sort((a, b) =>
-          String(a.fullName || a.name || "").localeCompare(
+        // Oldest first: a newly added member goes to the bottom of
+        // the list, not the top. A member whose server timestamp is
+        // still pending counts as "just now", so it also lands last.
+        memberData.sort((a, b) => {
+          const aTime = timeOf(a.createdAt) || Date.now();
+          const bTime = timeOf(b.createdAt) || Date.now();
+          if (aTime !== bTime) return aTime - bTime;
+          return String(a.fullName || a.name || "").localeCompare(
             String(b.fullName || b.name || "")
-          )
-        );
+          );
+        });
 
         setMembers(memberData);
         setLoading(false);

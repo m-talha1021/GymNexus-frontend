@@ -103,11 +103,16 @@ export default function Payments() {
           id: item.id,
           ...item.data(),
         }));
-        data.sort((a, b) =>
-          String(a.fullName || a.name || "").localeCompare(
+        // Same order as the Members page: oldest first, so a newly
+        // added member goes to the bottom of the list.
+        data.sort((a, b) => {
+          const aTime = asDate(a.createdAt)?.getTime() || Date.now();
+          const bTime = asDate(b.createdAt)?.getTime() || Date.now();
+          if (aTime !== bTime) return aTime - bTime;
+          return String(a.fullName || a.name || "").localeCompare(
             String(b.fullName || b.name || "")
-          )
-        );
+          );
+        });
         setMembers(data);
       },
       (err) => {
