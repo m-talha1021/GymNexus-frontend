@@ -675,6 +675,8 @@ export function Dashboard({ user, onNavigate }) {
       (member) => !hasPaidThisMonth(member)
     ).length;
 
+    // Still the 5 most recently registered members, but listed
+    // oldest to newest (GYM-001 at the top).
     const recentMembers = [...members]
       .sort((a, b) => {
         const aDate =
@@ -685,7 +687,8 @@ export function Dashboard({ user, onNavigate }) {
 
         return bDate - aDate;
       })
-      .slice(0, 5);
+      .slice(0, 5)
+      .reverse();
 
     const upcoming = members
       .map((member) => ({
